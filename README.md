@@ -245,7 +245,7 @@ terraform apply
 ```
 
 2. Build and push the web image to ECR.
-   - The repo includes `.github/workflows/deploy-apprunner.yml` for GitHub Actions.
+   - The repo includes `.github/workflows/deploy-ecs.yml` for GitHub Actions.
    - Set these GitHub secrets:
      - `AWS_ACCESS_KEY_ID`
      - `AWS_SECRET_ACCESS_KEY`
