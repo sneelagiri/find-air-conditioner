@@ -41,7 +41,7 @@ public sealed partial class PlaywrightAirConditionerScraper(
 
         foreach (var source in sources)
         {
-            var url = BuildSourceUrl(source.UrlTemplate, postalCode);
+            string url = source.UrlTemplate;
             logger.LogInformation("Scraping source {SourceName} from {Url}.", source.Name, url);
 
             var page = await context.NewPageAsync();
@@ -245,9 +245,6 @@ public sealed partial class PlaywrightAirConditionerScraper(
         var match = Regex.Match(text, @"[£€$]\s*\d[\d.,]*");
         return match.Success ? match.Value : string.Empty;
     }
-
-    static string BuildSourceUrl(string urlTemplate, string postalCode)
-        => urlTemplate.Replace("{postalCode}", Uri.EscapeDataString(postalCode), StringComparison.OrdinalIgnoreCase);
 
     static bool IsUnavailable(string? text, IReadOnlyCollection<string> unavailableKeywords)
     {
