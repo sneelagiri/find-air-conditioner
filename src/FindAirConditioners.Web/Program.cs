@@ -29,7 +29,7 @@ builder.Services.AddSingleton<IAirConditionerScraper, PlaywrightAirConditionerSc
 builder.Services.AddSingleton<IEmailNotificationSender, EmailNotificationSender>();
 
 var appConfigSecretName = builder.Configuration["Aws:AppConfigSecretName"];
-var awsRegionName = builder.Configuration["Aws:Region"] ?? Environment.GetEnvironmentVariable("AWS_REGION") ?? "eu-west-1";
+var awsRegionName = builder.Configuration["Aws:Region"] ?? Environment.GetEnvironmentVariable("AWS_REGION") ?? "eu-north-1";
 
 if (!string.IsNullOrWhiteSpace(appConfigSecretName))
 {
