@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>FindAirConditioners.Application</AssemblyName>
+    <RootNamespace>FindAirConditioners.Application</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FindAirConditioners.Domain\FindAirConditioners.Domain.csproj" />
+  </ItemGroup>
+</Project>

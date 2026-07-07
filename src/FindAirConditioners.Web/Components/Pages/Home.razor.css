@@ -1,0 +1,88 @@
+.panel {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(16, 32, 43, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(16, 32, 43, 0.08);
+  padding: 1.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.notification-toggle {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.25rem 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: rgba(12, 74, 110, 0.06);
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 700;
+}
+
+.checkbox-row input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.hint {
+  margin: 0;
+  color: #51636f;
+  font-size: 0.95rem;
+}
+
+.hint-inline {
+  color: #51636f;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+input {
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid #c8d2d8;
+}
+
+button {
+  background: #0c4a6e;
+  color: white;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.8rem 1.2rem;
+  font-weight: 700;
+}
+
+.status {
+  margin-top: 1rem;
+  color: #0c4a6e;
+}
+
+.cards {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cards li {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: #f2f7fa;
+}

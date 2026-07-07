@@ -1,0 +1,143 @@
+@page "/"
+@using System.ComponentModel.DataAnnotations
+@using FindAirConditioners.Web.Core.Abstractions
+@using FindAirConditioners.Web.Core.Models
+@inject IAirConditionerCollectionService CollectionService
+@inject IAirConditionerRepository Repository
+
+<section class="panel">
+    <h2>Search available air conditioners</h2>
+    <p>Submit a request and retrieve the analyzed result once the backend has processed the queue.</p>
+
+    <EditForm Model="@request" OnValidSubmit="SubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="grid">
+            <label>
+                Max price
+                <InputNumber @bind-Value="request.MaxPrice" />
+            </label>
+        </div>
+
+        <div class="notification-toggle">
+            <label class="checkbox-row">
+                <InputCheckbox @bind-Value="request.EnableEmailNotifications" />
+                Send email notifications for this search
+            </label>
+            <p class="hint">Use this if you want hourly scheduled results or a one-off search to email you when analysis finishes.</p>
+        </div>
+
+        @if (request.EnableEmailNotifications)
+        {
+            <div class="grid">
+                <label>
+                    Email address
+                    <InputText @bind-Value="request.NotificationEmail" />
+                </label>
+            </div>
+        }
+
+        <button type="submit">Find options</button>
+    </EditForm>
+
+    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    {
+        <p class="status">@statusMessage</p>
+    }
+
+    @if (result is not null)
+    {
+        <h3>Results</h3>
+        <p>@result.Summary</p>
+        <ul class="cards">
+            @foreach (var listing in result.Listings)
+            {
+                <li>
+                    <strong>@listing.Title</strong>
+                    <span>@listing.Source</span>
+                    <span>@listing.Price.ToString("C")</span>
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@code {
+    readonly SearchFormModel request = new()
+    {
+        MaxPrice = 700
+    };
+    string? statusMessage;
+    AirConditionerSearchResult? result;
+
+    async Task SubmitAsync()
+    {
+        statusMessage = "Submitting request...";
+        var searchRequest = request.ToDomainRequest();
+        var searchId = await CollectionService.QueueCollectionAsync(searchRequest);
+        statusMessage = $"Search queued: {searchId}";
+        await PollAsync(searchId);
+    }
+
+    async Task PollAsync(Guid searchId)
+    {
+        for (var attempt = 0; attempt < 10; attempt++)
+        {
+            await Task.Delay(250);
+            var currentResult = await Repository.GetResultAsync(searchId);
+            if (currentResult is null)
+            {
+                continue;
+            }
+
+            result = currentResult;
+            statusMessage = $"Search complete: {result.Status}";
+            return;
+        }
+
+        statusMessage = "The search is still processing. Refresh to check again.";
+    }
+
+    private sealed class SearchFormModel
+        : IValidatableObject
+    {
+        public decimal? MaxPrice { get; set; }
+
+        public bool EnableEmailNotifications { get; set; }
+
+        [EmailAddress]
+        public string? NotificationEmail { get; set; }
+
+        public AirConditionerSearchRequest ToDomainRequest()
+        {
+            return new AirConditionerSearchRequest(
+                string.Empty,
+                MaxPrice,
+                EnableEmailNotifications ? NotificationEmail : null);
+        }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!EnableEmailNotifications)
+            {
+                yield break;
+            }
+
+            if (string.IsNullOrWhiteSpace(NotificationEmail))
+            {
+                yield return new ValidationResult(
+                    "Email address is required when email notifications are enabled.",
+                    [nameof(NotificationEmail)]);
+                yield break;
+            }
+
+            if (!new EmailAddressAttribute().IsValid(NotificationEmail))
+            {
+                yield return new ValidationResult(
+                    "Enter a valid email address.",
+                    [nameof(NotificationEmail)]);
+            }
+        }
+    }
+}

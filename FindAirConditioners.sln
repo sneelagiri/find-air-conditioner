@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{592FAC55-28C8-43EA-A9B2-669D6C9226D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindAirConditioners.Domain", "src\FindAirConditioners.Domain\FindAirConditioners.Domain.csproj", "{6FB363DF-1AF6-4FFD-A6E0-D222D06ED4DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindAirConditioners.Application", "src\FindAirConditioners.Application\FindAirConditioners.Application.csproj", "{62C2F617-5BCE-4C4D-9B97-338BA37B8F00}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindAirConditioners.Web", "src\FindAirConditioners.Web\FindAirConditioners.Web.csproj", "{8DEBCF31-36D7-46D6-BEB0-C74010F3FDBD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{ECB0D041-9893-42B9-B948-A1517AD6D950}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindAirConditioners.UnitTests", "tests\FindAirConditioners.UnitTests\FindAirConditioners.UnitTests.csproj", "{F892F521-FC8B-4BF1-B9FC-535DCCD49BD0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindAirConditioners.IntegrationTests", "tests\FindAirConditioners.IntegrationTests\FindAirConditioners.IntegrationTests.csproj", "{B9C151F9-ADC2-4B4A-8C99-68D69D662748}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6FB363DF-1AF6-4FFD-A6E0-D222D06ED4DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FB363DF-1AF6-4FFD-A6E0-D222D06ED4DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FB363DF-1AF6-4FFD-A6E0-D222D06ED4DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FB363DF-1AF6-4FFD-A6E0-D222D06ED4DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62C2F617-5BCE-4C4D-9B97-338BA37B8F00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62C2F617-5BCE-4C4D-9B97-338BA37B8F00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62C2F617-5BCE-4C4D-9B97-338BA37B8F00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62C2F617-5BCE-4C4D-9B97-338BA37B8F00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DEBCF31-36D7-46D6-BEB0-C74010F3FDBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DEBCF31-36D7-46D6-BEB0-C74010F3FDBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DEBCF31-36D7-46D6-BEB0-C74010F3FDBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DEBCF31-36D7-46D6-BEB0-C74010F3FDBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F892F521-FC8B-4BF1-B9FC-535DCCD49BD0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F892F521-FC8B-4BF1-B9FC-535DCCD49BD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F892F521-FC8B-4BF1-B9FC-535DCCD49BD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F892F521-FC8B-4BF1-B9FC-535DCCD49BD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9C151F9-ADC2-4B4A-8C99-68D69D662748}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9C151F9-ADC2-4B4A-8C99-68D69D662748}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9C151F9-ADC2-4B4A-8C99-68D69D662748}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9C151F9-ADC2-4B4A-8C99-68D69D662748}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6FB363DF-1AF6-4FFD-A6E0-D222D06ED4DD} = {592FAC55-28C8-43EA-A9B2-669D6C9226D4}
+		{62C2F617-5BCE-4C4D-9B97-338BA37B8F00} = {592FAC55-28C8-43EA-A9B2-669D6C9226D4}
+		{8DEBCF31-36D7-46D6-BEB0-C74010F3FDBD} = {592FAC55-28C8-43EA-A9B2-669D6C9226D4}
+		{F892F521-FC8B-4BF1-B9FC-535DCCD49BD0} = {ECB0D041-9893-42B9-B948-A1517AD6D950}
+		{B9C151F9-ADC2-4B4A-8C99-68D69D662748} = {ECB0D041-9893-42B9-B948-A1517AD6D950}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>FindAirConditioners.Domain</AssemblyName>
+    <RootNamespace>FindAirConditioners.Domain</RootNamespace>
+  </PropertyGroup>
+</Project>
