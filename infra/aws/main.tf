@@ -380,6 +380,106 @@ resource "aws_ecs_task_definition" "app" {
       {
         name  = "Aws__AppConfigSecretName"
         value = aws_secretsmanager_secret.app_config.name
+      },
+      {
+        name  = "Notifications__FromAddress"
+        value = var.notifications_from_address
+      },
+      {
+        name  = "Notifications__FromName"
+        value = var.notifications_from_name
+      },
+      {
+        name  = "Notifications__SmtpHost"
+        value = var.notifications_smtp_host
+      },
+      {
+        name  = "Notifications__SmtpPort"
+        value = var.notifications_smtp_port
+      },
+      {
+        name  = "Notifications__SmtpUsername"
+        value = var.notifications_smtp_username
+      },
+      {
+        name  = "Notifications__SmtpPassword"
+        value = var.notifications_smtp_password
+      },
+      {
+        name  = "Notifications__UseSsl"
+        value = var.notifications_use_ssl
+      },
+      {
+        name  = "Scheduler__Enabled"
+        value = var.scheduler_enabled
+      },
+      {
+        name  = "Scheduler__IntervalMinutes"
+        value = var.scheduler_interval_minutes
+      },
+      {
+        name  = "Scheduler__Subscriptions__0__MaxPrice"
+        value = var.scheduler_max_price
+      },
+      {
+        name  = "Scheduler__Subscriptions__0__NotificationEmail"
+        value = var.scheduler_notification_email
+      },
+      {
+        name  = "Scraper__Sources__0__Name"
+        value = "Joybuy"
+      },
+      {
+        name  = "Scraper__Sources__0__UrlTemplate"
+        value = var.scraper_url_template
+      },
+      {
+        name  = "Scraper__Sources__0__ListingSelector"
+        value = var.scraper_listing_selector
+      },
+      {
+        name  = "Scraper__Sources__0__LinkSelector"
+        value = "a"
+      },
+      {
+        name  = "Scraper__Sources__0__ImageSelector"
+        value = "img"
+      },
+      {
+        name  = "Scraper__Sources__0__AvailabilitySelector"
+        value = var.scraper_availability_selector
+      },
+      {
+        name  = "Scraper__Sources__0__UnavailableKeywords__0"
+        value = "out of stock"
+      },
+      {
+        name  = "Scraper__Sources__0__UnavailableKeywords__1"
+        value = "sold out"
+      },
+      {
+        name  = "Scraper__Sources__0__UnavailableKeywords__2"
+        value = "unavailable"
+      },
+      {
+        name  = "Scraper__Sources__0__UnavailableKeywords__3"
+        value = "not available"
+      },
+      {
+        name  = "Scraper__Sources__0__UnavailableKeywords__4"
+        value = "niet beschikbaar"
+      },
+      {
+        name  = "Scraper__Sources__0__UnavailableKeywords__5"
+        value = "niet beschibaar"
+      },
+      {
+        name  = "Scraper__Sources__0__UnavailableKeywords__6"
+        value = "niet op voorraad"
+      },
+      {
+        name  = "Scraper__Sources__0__UnavailableKeywords__7"
+        value = "uitverkocht"
       }
     ]
 
@@ -476,5 +576,43 @@ resource "aws_ecs_service" "app" {
     Name        = local.ecs_service_name
     Environment = var.environment
     Project     = var.project_name
+  }
+}
+
+resource "aws_autoscaling_target" "ecs_target" {
+  max_capacity       = 3
+  min_capacity       = 1
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.app.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_autoscaling_policy" "ecs_policy_cpu" {
+  name               = "${local.name_prefix}-cpu-autoscaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_autoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_autoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_autoscaling_target.ecs_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value = 70.0
+  }
+}
+
+resource "aws_autoscaling_policy" "ecs_policy_memory" {
+  name               = "${local.name_prefix}-memory-autoscaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_autoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_autoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_autoscaling_target.ecs_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+    target_value = 80.0
   }
 }
