@@ -55,7 +55,27 @@ output "ecr_repository_name" {
   description = "ECR repository name for the application image."
 }
 
-output "apprunner_service_url" {
-  value       = try(aws_apprunner_service.web[0].service_url, null)
-  description = "App Runner service URL once enabled."
+output "ecs_cluster_name" {
+  value       = aws_ecs_cluster.main.name
+  description = "ECS cluster name."
+}
+
+output "ecs_service_name" {
+  value       = aws_ecs_service.app.name
+  description = "ECS service name."
+}
+
+output "ecs_task_definition_name" {
+  value       = aws_ecs_task_definition.app.family
+  description = "ECS task definition name."
+}
+
+output "alb_dns_name" {
+  value       = aws_lb.main.dns_name
+  description = "Load balancer DNS name - use this to access your app."
+}
+
+output "alb_arn" {
+  value       = aws_lb.main.arn
+  description = "Load balancer ARN."
 }

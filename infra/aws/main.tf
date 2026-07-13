@@ -5,8 +5,9 @@ locals {
     analyze = "${local.name_prefix}-analyze"
     notify  = "${local.name_prefix}-notify"
   }
-  ecr_repository_name    = "${local.name_prefix}-app"
-  apprunner_service_name = "${local.name_prefix}-app"
+  ecr_repository_name = "${local.name_prefix}-app"
+  ecs_cluster_name    = "${local.name_prefix}-cluster"
+  ecs_service_name    = "${local.name_prefix}-service"
 }
 
 data "aws_availability_zones" "available" {
@@ -86,6 +87,65 @@ resource "aws_security_group" "db" {
 
   tags = {
     Name        = "${local.name_prefix}-db-sg"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+resource "aws_security_group" "ecs" {
+  name        = "${local.name_prefix}-ecs-sg"
+  description = "Allow traffic to ECS tasks"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${local.name_prefix}-ecs-sg"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+resource "aws_security_group" "alb" {
+  name        = "${local.name_prefix}-alb-sg"
+  description = "Allow HTTP/HTTPS to ALB"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${local.name_prefix}-alb-sg"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -181,61 +241,44 @@ resource "aws_secretsmanager_secret_version" "app_config" {
   secret_id = aws_secretsmanager_secret.app_config.id
 
   secret_string = jsonencode({
-    ConnectionString = "Host=${aws_db_instance.this.address};Port=${aws_db_instance.this.port};Database=${var.db_name};Username=${var.db_username};Password=${random_password.db_password.result};SSL Mode=Require;Trust Server Certificate=true"
+    ConnectionString = "Host=${aws_db_instance.this.address};Port=${aws_db_instance.this.port};Database=${var.db_name};Username=${var.db_username};Password=${random_password.db_password.result};SslMode=Require;"
     CollectQueueUrl  = aws_sqs_queue.collect.url
     AnalyzeQueueUrl  = aws_sqs_queue.analyze.url
     NotifyQueueUrl   = aws_sqs_queue.notify.url
   })
 }
 
-data "aws_iam_policy_document" "apprunner_ecr_assume_role" {
+data "aws_iam_policy_document" "ecs_task_assume_role" {
   statement {
     effect = "Allow"
 
     principals {
       type        = "Service"
-      identifiers = ["build.apprunner.amazonaws.com"]
+      identifiers = ["ecs-tasks.amazonaws.com"]
     }
 
     actions = ["sts:AssumeRole"]
   }
 }
 
-data "aws_iam_policy_document" "apprunner_instance_assume_role" {
-  statement {
-    effect = "Allow"
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name               = "${local.name_prefix}-ecs-task-execution-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 
-    principals {
-      type        = "Service"
-      identifiers = ["tasks.apprunner.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
+  tags = {
+    Name        = "${local.name_prefix}-ecs-task-execution-role"
+    Environment = var.environment
+    Project     = var.project_name
   }
 }
 
-data "aws_iam_policy_document" "apprunner_ecr_access" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "ecr:GetAuthorizationToken"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:BatchGetImage",
-      "ecr:DescribeImages",
-      "ecr:GetDownloadUrlForLayer"
-    ]
-    resources = [aws_ecr_repository.app.arn]
-  }
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-data "aws_iam_policy_document" "apprunner_instance_access" {
+# IAM Role for task to access secrets and queues
+data "aws_iam_policy_document" "ecs_task_role" {
   statement {
     effect = "Allow"
     actions = [
@@ -262,85 +305,175 @@ data "aws_iam_policy_document" "apprunner_instance_access" {
   }
 }
 
-resource "aws_iam_role" "apprunner_ecr_access" {
-  name               = "${local.name_prefix}-apprunner-ecr-access"
-  assume_role_policy = data.aws_iam_policy_document.apprunner_ecr_assume_role.json
+resource "aws_iam_role" "ecs_task_role" {
+  name               = "${local.name_prefix}-ecs-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 
   tags = {
-    Name        = "${local.name_prefix}-apprunner-ecr-access"
+    Name        = "${local.name_prefix}-ecs-task-role"
     Environment = var.environment
     Project     = var.project_name
   }
 }
 
-resource "aws_iam_role_policy" "apprunner_ecr_access" {
-  name   = "${local.name_prefix}-apprunner-ecr-access"
-  role   = aws_iam_role.apprunner_ecr_access.id
-  policy = data.aws_iam_policy_document.apprunner_ecr_access.json
+resource "aws_iam_role_policy" "ecs_task_role_policy" {
+  name   = "${local.name_prefix}-ecs-task-role-policy"
+  role   = aws_iam_role.ecs_task_role.id
+  policy = data.aws_iam_policy_document.ecs_task_role.json
 }
 
-resource "aws_iam_role" "apprunner_instance" {
-  name               = "${local.name_prefix}-apprunner-instance"
-  assume_role_policy = data.aws_iam_policy_document.apprunner_instance_assume_role.json
+resource "aws_ecs_cluster" "main" {
+  name = local.ecs_cluster_name
 
   tags = {
-    Name        = "${local.name_prefix}-apprunner-instance"
+    Name        = local.ecs_cluster_name
     Environment = var.environment
     Project     = var.project_name
   }
 }
 
-resource "aws_iam_role_policy" "apprunner_instance" {
-  name   = "${local.name_prefix}-apprunner-instance"
-  role   = aws_iam_role.apprunner_instance.id
-  policy = data.aws_iam_policy_document.apprunner_instance_access.json
+resource "aws_cloudwatch_log_group" "ecs" {
+  name              = "/ecs/${local.name_prefix}"
+  retention_in_days = 7
+
+  tags = {
+    Name        = "${local.name_prefix}-logs"
+    Environment = var.environment
+    Project     = var.project_name
+  }
 }
 
-resource "aws_apprunner_service" "web" {
-  count        = var.enable_apprunner_service ? 1 : 0
-  service_name = local.apprunner_service_name
+# ECS Task Definition
+resource "aws_ecs_task_definition" "app" {
+  family                   = local.name_prefix
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
 
-  source_configuration {
-    auto_deployments_enabled = true
+  container_definitions = jsonencode([{
+    name      = local.name_prefix
+    image     = "${aws_ecr_repository.app.repository_url}:latest"
+    essential = true
 
-    authentication_configuration {
-      access_role_arn = aws_iam_role.apprunner_ecr_access.arn
-    }
+    portMappings = [{
+      containerPort = 8080
+      hostPort      = 8080
+      protocol      = "tcp"
+    }]
 
-    image_repository {
-      image_identifier      = "${aws_ecr_repository.app.repository_url}:${var.app_image_tag}"
-      image_repository_type = "ECR"
+    environment = [
+      {
+        name  = "ASPNETCORE_ENVIRONMENT"
+        value = "Production"
+      },
+      {
+        name  = "ASPNETCORE_URLS"
+        value = "http://+:8080"
+      },
+      {
+        name  = "AWS_REGION"
+        value = var.aws_region
+      },
+      {
+        name  = "Aws__AppConfigSecretName"
+        value = aws_secretsmanager_secret.app_config.name
+      }
+    ]
 
-      image_configuration {
-        port = "8080"
-
-        runtime_environment_variables = {
-          ASPNETCORE_ENVIRONMENT   = "Production"
-          ASPNETCORE_URLS          = "http://+:8080"
-          AWS_REGION               = var.aws_region
-          Aws__AppConfigSecretName = aws_secretsmanager_secret.app_config.name
-        }
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+        "awslogs-region"        = var.aws_region
+        "awslogs-stream-prefix" = "ecs"
       }
     }
-  }
+  }])
 
-  instance_configuration {
-    instance_role_arn = aws_iam_role.apprunner_instance.arn
-    cpu               = "1 vCPU"
-    memory            = "2 GB"
+  tags = {
+    Name        = "${local.name_prefix}-task"
+    Environment = var.environment
+    Project     = var.project_name
   }
+}
 
-  health_check_configuration {
-    protocol            = "HTTP"
+resource "aws_lb" "main" {
+  name               = "${local.name_prefix}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = data.aws_subnets.default.ids
+
+  tags = {
+    Name        = "${local.name_prefix}-alb"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+resource "aws_lb_target_group" "app" {
+  name        = "${local.name_prefix}-tg"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = data.aws_vpc.default.id
+  target_type = "ip"
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    interval            = 30
     path                = "/"
-    interval            = 10
-    timeout             = 5
-    healthy_threshold   = 1
-    unhealthy_threshold = 5
+    matcher             = "200-399"
   }
 
   tags = {
-    Name        = local.apprunner_service_name
+    Name        = "${local.name_prefix}-tg"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+resource "aws_lb_listener" "app" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+}
+
+resource "aws_ecs_service" "app" {
+  name            = local.ecs_service_name
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.app.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = data.aws_subnets.default.ids
+    security_groups  = [aws_security_group.ecs.id]
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = local.name_prefix
+    container_port   = 8080
+  }
+
+  depends_on = [
+    aws_lb_listener.app,
+    aws_iam_role_policy.ecs_task_role_policy
+  ]
+
+  tags = {
+    Name        = local.ecs_service_name
     Environment = var.environment
     Project     = var.project_name
   }
