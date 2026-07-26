@@ -4,9 +4,8 @@ namespace FindAirConditioners.Application.Services;
 
 public sealed class SeededAirConditionerCatalog
 {
-    public IReadOnlyCollection<AirConditionerListing> GetListings(string postalCode)
+    public IReadOnlyCollection<AirConditionerListing> GetListings()
     {
-        _ = postalCode;
 
         return
         [
