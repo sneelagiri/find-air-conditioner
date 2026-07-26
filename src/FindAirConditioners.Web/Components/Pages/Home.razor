@@ -12,7 +12,12 @@
     <EditForm Model="@request" OnValidSubmit="SubmitAsync">
         <DataAnnotationsValidator />
         <ValidationSummary />
-
+        <div class="grid">
+                <label>
+                    Echo input
+                    <InputText @bind-Value="request.EchoInput" />
+                </label>
+        </div>
         <div class="grid">
             <label>
                 Max price
@@ -44,6 +49,11 @@
     @if (!string.IsNullOrWhiteSpace(statusMessage))
     {
         <p class="status">@statusMessage</p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(request.EchoInput))
+    {
+        <p class="echoInput">@request.EchoInput</p>
     }
 
     @if (result is not null)
@@ -108,6 +118,8 @@
 
         [EmailAddress]
         public string? NotificationEmail { get; set; }
+
+        public string? EchoInput { get; set; }
 
         public AirConditionerSearchRequest ToDomainRequest()
         {
